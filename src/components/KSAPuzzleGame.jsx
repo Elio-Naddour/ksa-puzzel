@@ -5,8 +5,8 @@ import { regionsData } from "../data/regions";
 import { regionsInfo } from "../data/info";
 
 const SNAP_THRESHOLD = 30; // Generous distance threshold in pixels for smooth snapping
-const STAGE_WIDTH = 1500; // Fixed virtual coordinate width
-const STAGE_HEIGHT = 800; // Fixed virtual coordinate height
+const STAGE_WIDTH = 1700; // Fixed virtual coordinate width
+const STAGE_HEIGHT = 900; // Fixed virtual coordinate height
 
 // Centering offset for the map silhouette (Adjust if your SVG paths drift off-center)
 const MAP_OFFSET_X = STAGE_WIDTH / 4;
@@ -130,9 +130,26 @@ export default function KSAPuzzleGame() {
     );
   };
 
+  const sortedPieces = [...pieces].sort((firstPiece, secondPiece) => {
+    if (firstPiece.isSnapped === secondPiece.isSnapped) {
+      return 0;
+    }
+
+    return firstPiece.isSnapped ? -1 : 1;
+  });
+
+  const arabicRegionNames = new Map(
+    regionsInfo.map((region) => [region.id, region.name]),
+  );
+
   return (
     <div
-      style={{ padding: "20px", fontFamily: "sans-serif", textAlign: "center" }}
+      style={{
+        padding: "20px",
+        fontFamily: "sans-serif",
+        fontSize: "20px",
+        textAlign: "center",
+      }}
     >
       <div
         style={{
@@ -153,6 +170,7 @@ export default function KSAPuzzleGame() {
             border: "none",
             borderRadius: "6px",
             cursor: "pointer",
+            fontSize: "20px",
             fontWeight: "bold",
           }}
         >
@@ -160,7 +178,7 @@ export default function KSAPuzzleGame() {
         </button>
         {isCompleted && (
           <span
-            style={{ color: "#16a34a", fontWeight: "bold", fontSize: "1.2rem" }}
+            style={{ color: "#16a34a", fontWeight: "bold", fontSize: "24px" }}
           >
             🎉 Great job! Map assembled!
           </span>
@@ -192,7 +210,7 @@ export default function KSAPuzzleGame() {
 
           {/* Layer 2: Interactive Puzzle Pieces */}
           <Layer>
-            {pieces.map((piece) => (
+            {sortedPieces.map((piece) => (
               <Group
                 key={piece.id}
                 id={piece.id}
@@ -216,10 +234,10 @@ export default function KSAPuzzleGame() {
 
                 {/* Region Label at SVG Center Point */}
                 <Text
-                  text={piece.name}
+                  text={arabicRegionNames.get(piece.id) || piece.name}
                   x={piece.center.x - 30}
                   y={piece.center.y - 6}
-                  fontSize={11}
+                  fontSize={20}
                   fontStyle="bold"
                   fill={piece.isSnapped ? "#ffffff" : "#1e293b"}
                   align="center"
@@ -233,8 +251,8 @@ export default function KSAPuzzleGame() {
           <div
             style={{
               position: "absolute",
-              left: `${STAGE_WIDTH + 20}px`,
-              top: "20px",
+              left: `${STAGE_WIDTH - 180}px`,
+              top: "40px",
               width: "320px",
               padding: "20px",
               backgroundColor: "#ffffff",
@@ -249,7 +267,7 @@ export default function KSAPuzzleGame() {
             <h3
               style={{
                 margin: "0 0 12px",
-                fontSize: "22px",
+                fontSize: "26px",
                 color: "#1e293b",
               }}
             >
@@ -259,7 +277,7 @@ export default function KSAPuzzleGame() {
             <p
               style={{
                 margin: "0 0 16px",
-                fontSize: "14px",
+                fontSize: "18px",
                 lineHeight: "1.6",
                 color: "#475569",
               }}
@@ -280,7 +298,7 @@ export default function KSAPuzzleGame() {
                   style={{
                     margin: "4px 0 0",
                     color: "#64748b",
-                    fontSize: "13px",
+                    fontSize: "20px",
                     lineHeight: "1.5",
                   }}
                 >
@@ -294,7 +312,7 @@ export default function KSAPuzzleGame() {
                   style={{
                     margin: "4px 0 0",
                     color: "#64748b",
-                    fontSize: "13px",
+                    fontSize: "20px",
                     lineHeight: "1.5",
                   }}
                 >
@@ -308,7 +326,7 @@ export default function KSAPuzzleGame() {
                   style={{
                     margin: "4px 0 0",
                     color: "#64748b",
-                    fontSize: "13px",
+                    fontSize: "20px",
                     lineHeight: "1.5",
                   }}
                 >
@@ -322,7 +340,7 @@ export default function KSAPuzzleGame() {
                   style={{
                     margin: "4px 0 0",
                     color: "#64748b",
-                    fontSize: "13px",
+                    fontSize: "20px",
                     lineHeight: "1.5",
                   }}
                 >
