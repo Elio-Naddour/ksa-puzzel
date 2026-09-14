@@ -1,3 +1,8 @@
+export const mapSilhouette = {
+    backgroundSrc: "/bg.jpeg",
+    backgroundOpacity: 0.9
+};
+
 export const regionsData =  [
     {
         "id": "SA04",

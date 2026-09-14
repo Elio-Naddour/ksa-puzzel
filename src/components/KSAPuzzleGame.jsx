@@ -1,38 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { Stage, Layer, Path, Text, Group } from "react-konva";
 import confetti from "canvas-confetti";
-import { regionsData } from "../data/regions";
+import { mapSilhouette, regionsData } from "../data/regions";
 import { regionsInfo } from "../data/info";
 
 const SNAP_THRESHOLD = 30; // Generous distance threshold in pixels for smooth snapping
-const STAGE_WIDTH = 1700; // Fixed virtual coordinate width
+const STAGE_WIDTH = 1900; // Fixed virtual coordinate width
 const STAGE_HEIGHT = 900; // Fixed virtual coordinate height
 
 // Centering offset for the map silhouette (Adjust if your SVG paths drift off-center)
-const MAP_OFFSET_X = STAGE_WIDTH / 4;
+const MAP_OFFSET_X = 425;
 const MAP_OFFSET_Y = 0;
+const MAP_BOUNDS = regionsData.reduce(
+  (bounds, region) => ({
+    minX: Math.min(bounds.minX, region.bounds.minX),
+    minY: Math.min(bounds.minY, region.bounds.minY),
+    maxX: Math.max(bounds.maxX, region.bounds.maxX),
+    maxY: Math.max(bounds.maxY, region.bounds.maxY),
+  }),
+  { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
+);
+const MAP_RIGHT_EDGE = MAP_OFFSET_X + MAP_BOUNDS.maxX;
+const PIECES_AREA_PADDING = 20;
+
+const getScrambledPiecePosition = (region) => {
+  const piecesAreaLeft = MAP_RIGHT_EDGE + PIECES_AREA_PADDING;
+  const piecesAreaWidth = STAGE_WIDTH - piecesAreaLeft - PIECES_AREA_PADDING;
+  const maxX = Math.max(0, piecesAreaWidth - region.bounds.width);
+  const maxY = Math.max(
+    0,
+    STAGE_HEIGHT - region.bounds.height - PIECES_AREA_PADDING * 2,
+  );
+
+  return {
+    x: piecesAreaLeft + Math.floor(Math.random() * maxX) - region.bounds.minX,
+    y:
+      PIECES_AREA_PADDING +
+      Math.floor(Math.random() * maxY) -
+      region.bounds.minY,
+  };
+};
 
 export default function KSAPuzzleGame() {
   const [pieces, setPieces] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState(null);
 
-  // Initialize piece positions: half on the left side, half on the right side
+  // Initialize piece positions to the right of the map silhouette
   useEffect(() => {
-    const scrambled = regionsData.map((region, index) => {
-      // Alternate pieces between Left and Right drop zones
-      const isLeftSide = index % 2 === 0;
-
-      const randomX = isLeftSide
-        ? Math.floor(Math.random() * 200) - 100 // Left zone: X = 20px to 140px
-        : Math.floor(Math.random() * 200) + 700; // Right zone: X = 1000px to 1120px
-
-      const randomY = Math.floor(Math.random() * 100) - 50; // Spread across full height
+    const scrambled = regionsData.map((region) => {
+      const position = getScrambledPiecePosition(region);
 
       return {
         ...region,
-        x: randomX,
-        y: randomY,
+        ...position,
         isSnapped: false,
       };
     });
@@ -115,15 +136,12 @@ export default function KSAPuzzleGame() {
     setSelectedRegion(null);
 
     setPieces((prevPieces) =>
-      prevPieces.map((region, index) => {
-        const isLeftSide = index % 2 === 0;
+      prevPieces.map((region) => {
+        const position = getScrambledPiecePosition(region);
 
         return {
           ...region,
-          x: isLeftSide
-            ? Math.floor(Math.random() * 200) - 100
-            : Math.floor(Math.random() * 200) + 700,
-          y: Math.floor(Math.random() * 100) - 50,
+          ...position,
           isSnapped: false,
         };
       }),
@@ -145,13 +163,74 @@ export default function KSAPuzzleGame() {
   return (
     <div
       style={{
-        padding: "20px",
+        // padding: "20px",
+        minHeight: "100vh",
         fontFamily: "sans-serif",
         fontSize: "20px",
         textAlign: "center",
+        backgroundImage: `url(${process.env.PUBLIC_URL}${mapSilhouette.backgroundSrc})`,
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+        backgroundAttachment: "fixed",
       }}
     >
       <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          padding: "8px 32px",
+          boxSizing: "border-box",
+        }}
+      >
+        <img
+          src={`${process.env.PUBLIC_URL}/l1.png`}
+          alt=""
+          style={{ maxHeight: "96px", maxWidth: "42vw", objectFit: "contain" }}
+        />
+        <div
+          style={{
+            marginBottom: "15px",
+            display: "flex",
+            justifyContent: "center",
+            gap: "20px",
+            alignItems: "center",
+          }}
+        >
+          <h2 style={{ color: "#fff" }}>اليوم الوطني السعودي 96</h2>
+          <button
+            onClick={handleReset}
+            style={{
+              padding: "8px 16px",
+              backgroundColor: "green",
+              opacity: 0.5,
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "20px",
+              fontWeight: "bold",
+            }}
+          >
+            ⭯
+          </button>
+          {isCompleted && (
+            <span
+              style={{ color: "#16a34a", fontWeight: "bold", fontSize: "24px" }}
+            >
+              🎉 Great job! Map assembled!
+            </span>
+          )}
+        </div>
+        <img
+          src={`${process.env.PUBLIC_URL}/l2.png`}
+          alt=""
+          style={{ maxHeight: "64px", maxWidth: "42vw", objectFit: "contain" }}
+        />
+      </div>
+
+      {/* <div
         style={{
           marginBottom: "15px",
           display: "flex",
@@ -160,7 +239,7 @@ export default function KSAPuzzleGame() {
           alignItems: "center",
         }}
       >
-        <h2>Saudi Arabia Regions Puzzle</h2>
+        <h2 style={{ color: "#fff",padding: "10px 0px" }}>Saudi Arabia Regions Puzzle</h2>
         <button
           onClick={handleReset}
           style={{
@@ -183,14 +262,16 @@ export default function KSAPuzzleGame() {
             🎉 Great job! Map assembled!
           </span>
         )}
-      </div>
+      </div> */}
 
       <div
         style={{
-          border: "2px solid #e5e7eb",
+          // border: "2px solid #e5e7eb",
           borderRadius: "8px",
-          display: "inline-block",
-          backgroundColor: "#f8fafc",
+          display: "block",
+          width: `${STAGE_WIDTH}px`,
+          margin: "0 auto",
+          backgroundColor: "transparent",
         }}
       >
         <Stage width={STAGE_WIDTH} height={STAGE_HEIGHT}>
@@ -200,7 +281,8 @@ export default function KSAPuzzleGame() {
               <Path
                 key={`outline-${region.id}`}
                 data={region.path}
-                fill="#e2e8f0"
+                fill="#fff"
+                opacity={0.3}
                 // stroke="#94a3b8"
                 // strokeWidth={1.5}
                 // dash={[4, 4]}
@@ -250,10 +332,12 @@ export default function KSAPuzzleGame() {
         {selectedRegion && (
           <div
             style={{
-              position: "absolute",
-              left: `${STAGE_WIDTH - 180}px`,
-              top: "40px",
+              position: "fixed",
+              left: "20px",
+              bottom: "20px",
               width: "320px",
+              maxHeight: "calc(100vh - 40px)",
+              overflowY: "auto",
               padding: "20px",
               backgroundColor: "#ffffff",
               border: "1px solid #e2e8f0",
